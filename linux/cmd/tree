@@ -1,0 +1,70 @@
+#!/bin/bash
+
+# pre-configuration
+TYPE_OPT="d"
+TYPE_CMD="-type"
+TYPE="$TYPE_CMD $TYPE_OPT"
+
+OUTPUT_CMD="| sed"
+OUTPUT_LAYOUT_CMD="-e"
+OUTPUT_LAYOUT_1='"s/[^-][^\/]*[^\/]*\//  |/g"'
+OUTPUT_LAYOUT_2='"s/|\([^ ]\)/|-\1/"'
+OUTPUT="$OUTPUT_CMD $OUTPUT_LAYOUT_CMD $OUTPUT_LAYOUT_1 $OUTPUT_LAYOUT_CMD $OUTPUT_LAYOUT_2"
+
+EXCLUDE_CMD="-not -path"
+
+INITIAL_CMD="find"
+
+excl_dirs="\"*node_modules*\" \"*bower_components*\""
+# excl_dirs_length=${#excl_dirs[@]}
+
+# logic
+
+# add all exludes directory together
+defineExcl ()
+{
+  for excl_dir in $excl_dirs
+    do
+      exclude="$exclude $EXCLUDE_CMD $excl_dir"
+  done
+}
+
+exclude=""
+directory="."
+flag=true
+while [ "$1" != "" ]
+do
+  case "$1" in
+    [^-]* )
+    echo $1
+      if [ "$flag" == true ];
+        then
+          directory="$1"
+          flag=false
+      fi
+      ;;
+    -e | --exldue )  # exclude all the dependencies directories
+      defineExcl;;
+    -h | --help )
+      echo "help file"
+      exit;;
+      -i | --info )
+        echo "INFO: "
+        echo " "
+        echo "This is used to generate a tree that describe the directory"
+        echo " "
+        printf '%*s\n' "${COLUMNS:-$(tput cols)}" '' | tr ' ' -
+        echo " "
+        exit;;
+    * )
+      echo "only support -e | -h"
+      exit
+      ;;
+  esac
+  shift
+done
+echo $directory
+
+cmd="$INITIAL_CMD $directory $TYPE $exclude $OUTPUT"
+eval $cmd
+# echo $cmd
