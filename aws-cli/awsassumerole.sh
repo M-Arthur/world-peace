@@ -13,7 +13,6 @@ function aar_init() {
   AAR_ENUM_COLOR_YELLOW="\033[33m"
   AAR_ENUM_COLOR_CYAN="\033[36m"
 
-  aar_targetRole="sandbox"
   aar_printResult=false
   aar_defaultCacheFile="/tmp/aws-assume-role-$(whoami)"
   aar_inputFile=$aar_defaultCacheFile
@@ -164,17 +163,17 @@ function aar_getAccountID() {
   targetEnv=$(aar_convertStringToLowercase "$1")
   case $targetEnv in
     "sandbox")
-      accountId=<Account ID of the assume role>
+      accountId=123456
       ;;
     "nonprod")
-      accountId=<Account ID of the assume role>
+      accountId=123456
       ;;
     "production")
       read -p "Are you sure to assume production role? " -r
       echo    # move to a new line
       if [[ $REPLY =~ ^(YES|yes|[Yy])$ ]]
       then
-        accountId=<Account ID of the assume role>
+        accountId=123456
       fi
       ;;
     *)
@@ -203,7 +202,7 @@ do
       echo "                'source' command must be used if user wants the assume role automatically effect"
       echo "                example: source scripts/initiate_aws_assumed_role_credentials.sh -r <assumed-role> -n <unique-session-name> --token <token>"
       echo " "
-      echo "awsassumerole [options...]"
+      echo "awsassumerole -a/--accountId <account number> [options...]"
       echo "-h, --help                                    show brief help"
       echo "-i, --input-file <filepath>                   load session configured in the file and"
       echo "                                              refresh when session duration is less than 10 minutes"
@@ -211,15 +210,20 @@ do
       echo "-n, --session-name <name>                     unique name for current assume role session"
       echo "-o, --output-file <filepath>                  put output of assume role command into the specified file"
       echo "-p, --onscreen-print                          print results of assume role command to screen"
-      echo "-r, --role [sandbox|nonprod|production]       role to be assumed"
+      echo "-a, --accountId                               accountId of the assumed role"
       echo "-t, --token <token>                           token must be provided when MFA serial number is set."
       echo "                                              To set MFA serial number, user has to either pass the"
       echo "                                              environment variable MFA_SERIAL_NUMBER to the script"
       echo "                                              or export that variable so the script can pick it up"
       return 1 2>/dev/null || exit 1
       ;;
-    -r|--role)
+    -a|--accountId)
       aar_targetRole=$aar_flagValue
+      if [[ ! $aar_targetRole =~ ^[0-9]+$ ]]
+      then
+        aar_printError "Option -a or --accountId must be provided with valid number."
+        return 1 2>/dev/null || exit 1
+      fi
       ;;
     -o|--output-file)
       aar_outputFile=$aar_flagValue
